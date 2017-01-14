@@ -191,10 +191,11 @@ public class ConstraintsChecker {
         }
         for (Integer key : cpuDemandPerServer.keySet()) {
             if (cpuDemandPerServer.get(key).floatValue() <= this.instance.cpuAvailable.get(key).floatValue()) {
+
+                print("Server " + key + ": CPU demand (" + cpuDemandPerServer.get(key) + ") > available CPU ("
+                        + this.instance.cpuAvailable.get(key) + ") !");
                 continue;
             }
-            print("Server " + key + ": CPU demand (" + cpuDemandPerServer.get(key) + ") > available CPU ("
-                    + this.instance.cpuAvailable.get(key) + ") !\n");
             return false;
         }
 

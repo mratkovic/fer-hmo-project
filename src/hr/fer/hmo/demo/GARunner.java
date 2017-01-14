@@ -1,6 +1,7 @@
 package hr.fer.hmo.demo;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -8,12 +9,11 @@ import java.util.Random;
 import hr.fer.hmo.checker.ConstraintsChecker;
 import hr.fer.hmo.checker.FitnessCalculator;
 import hr.fer.hmo.checker.Instance;
-import hr.fer.hmo.checker.Solution;
 import hr.fer.zemris.optjava.dz4.function.IFunction;
 import hr.fer.zemris.optjava.dz4.function.InstanceFunction;
 import hr.fer.zemris.optjava.dz4.ga.GenerationGA;
 import hr.fer.zemris.optjava.ga.cross.ICross;
-import hr.fer.zemris.optjava.ga.cross.TwoPointCross;
+import hr.fer.zemris.optjava.ga.cross.SinglePointCross;
 import hr.fer.zemris.optjava.ga.decoder.IDecoder;
 import hr.fer.zemris.optjava.ga.decoder.PassThroughDecoder;
 import hr.fer.zemris.optjava.ga.mutation.IMutation;
@@ -34,7 +34,7 @@ public class GARunner {
 
         /** Default parameters */
         Random rnd = new Random();
-        int populationSize = 80;
+        int populationSize = 100;
         double minError = 0.05;
         int maxIter = 100000;
 
@@ -45,9 +45,9 @@ public class GARunner {
         System.out.println("Parsed...\n");
         IFunction f = new InstanceFunction(problem, calc, checker);
 
-        ISelection<IntArraySolution> selection = new Tournament<>(5);
-        ICross<IntArraySolution> cross = new TwoPointCross(rnd);
-        IMutation<IntArraySolution> mutation = new ToggleMutation(rnd);
+        ISelection<IntArraySolution> selection = new Tournament<>(3);
+        ICross<IntArraySolution> cross = new SinglePointCross(rnd);
+        IMutation<IntArraySolution> mutation = new ToggleMutation(rnd, 2);
         IDecoder<IntArraySolution> decoder = new PassThroughDecoder();
 
         List<IntArraySolution> population = generateInitialPopulation(rnd, problem, populationSize);
@@ -60,21 +60,24 @@ public class GARunner {
 
     private static List<IntArraySolution> generateInitialPopulation(final Random rnd, final Instance problem,
             final int populationSize) throws IOException {
-        int[] possibleValues = new int[problem.nServers];
-        for (int i = 0; i < possibleValues.length; ++i) {
-            possibleValues[i] = i + 1;
 
+        int tabooNode = 1;
+        ArrayList<Integer> availableServers = new ArrayList<>();
+        for (int i = 1; i <= problem.nNodes; ++i) {
+            if (i != tabooNode) {
+                availableServers.addAll(problem.onNode.get(i));
+            }
         }
-        String solPath = "./sol_4292_92777778_1484151396.txt";
-        Solution sol = new Solution(solPath);
+
+        int[] possibleValues = new int[availableServers.size()];
+        for (int i = 0; i < possibleValues.length; ++i) {
+            possibleValues[i] = availableServers.get(i);
+        }
 
         List<IntArraySolution> population = new LinkedList<>();
         for (int i = 0; i < populationSize; i++) {
             IntArraySolution s = new IntArraySolution(problem.usedComponents.size(), possibleValues);
-            for (int j = 0; j < s.size(); ++j) {
-                s.values[j] = sol.getCompLocationsArrray().get(j);
-
-            }
+            s.randomize(rnd);
 
             population.add(s);
         }

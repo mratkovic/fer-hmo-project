@@ -6,18 +6,21 @@ import hr.fer.zemris.optjava.ga.solution.IntArraySolution;
 
 public class ToggleMutation implements IMutation<IntArraySolution> {
     Random rnd;
+    int k;
 
-    public ToggleMutation(final Random rnd) {
+    public ToggleMutation(final Random rnd, final int k) {
         this.rnd = rnd;
+        this.k = k;
     }
 
     @Override
     public IntArraySolution mutate(final IntArraySolution individual) {
         IntArraySolution d = individual.duplicate();
-
-        int i = rnd.nextInt(individual.size());
-        int index = rnd.nextInt(individual.possibleValues.length);
-        d.values[i] = d.possibleValues[index];
+        for (int i = 0; i < k; ++i) {
+            int index = rnd.nextInt(individual.size());
+            int valIndex = rnd.nextInt(individual.possibleValues.length);
+            d.values[index] = d.possibleValues[valIndex];
+        }
         return d;
     }
 
