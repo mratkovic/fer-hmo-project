@@ -158,10 +158,8 @@ public class ConstraintsChecker {
             }
         }
         for (Link link : this.instance.links) {
-            // print("Link from node " + link.getSrcNode() + " to
-            // node " + link.getDestNode()
-            // + " Link traffic: " + link.getTraffic() + " link capacity: " +
-            // link.getCapacity());
+            print("Link from node " + link.getSrcNode() + " to node " + link.getDestNode() + " Link traffic: "
+                    + link.getTraffic() + " link capacity: " + link.getCapacity());
             if (link.getTraffic() <= link.getCapacity()) {
                 continue;
             }

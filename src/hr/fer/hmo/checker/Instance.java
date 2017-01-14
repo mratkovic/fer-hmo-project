@@ -83,6 +83,15 @@ public class Instance {
             });
 
         }
+        usedNodes.sort(new Comparator<Integer>() {
+
+            @Override
+            public int compare(final Integer o1, final Integer o2) {
+                return -Float.compare(cpuPerNode.get(o1), cpuPerNode.get(o2));
+            }
+        });
+
+        usedComponents.sort((i, j) -> Integer.compare(i, j));
 
     }
 

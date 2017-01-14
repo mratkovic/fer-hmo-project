@@ -116,10 +116,10 @@ public class GenerationGA<T extends SingleObjectiveSolution> {
                         inf++;
                     }
                 }
-                System.out.println(it + "\t\tBest ->  Fitness: " + best.fitness + "; Cost: " + best.value + ";"
+                System.out.println(it + "\t\tBest ->  Fitness: " + newBest.fitness + "; Cost: " + newBest.value + ";"
                         + pop.size() + "; infs" + inf);
             }
-            f.saveSolution(decoder.decode(best), String.format("solutions/%f.txt", best.value));
+            f.saveSolution(decoder.decode(newBest), String.format("solutions/%f.txt", newBest.value));
 
             best = newBest;
             ++it;
@@ -139,10 +139,10 @@ public class GenerationGA<T extends SingleObjectiveSolution> {
 
         while (nextGen.size() < populationSize) {
             T p1 = selection.selectFromPopulation(population, rnd);
-            // T p2 = selection.selectFromPopulation(population, rnd);
-            // List<T> children = cross.crossParents(p1, p2);
-            T bestChild = mutation.mutate(p1);
-            List<T> neighbors = localSearch.neighbors(bestChild);
+            T p2 = selection.selectFromPopulation(population, rnd);
+            List<T> children = cross.crossParents(p1, p2);
+            // T bestChild = mutation.mutate(p1);
+            List<T> neighbors = localSearch.neighbors(children.get(0));
             // neighbors.add(bestChild);
             // evaluatePopulation(neighbors);
             nextGen.add(neighbors.get(0));

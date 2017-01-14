@@ -23,7 +23,6 @@ import hr.fer.zemris.optjava.ga.mutation.IMutation;
 import hr.fer.zemris.optjava.ga.mutation.ToggleMutation;
 import hr.fer.zemris.optjava.ga.selection.ISelection;
 import hr.fer.zemris.optjava.ga.selection.RouletteWheelSelection;
-import hr.fer.zemris.optjava.ga.selection.Tournament;
 import hr.fer.zemris.optjava.ga.solution.IntArraySolution;
 
 public class GARunner {
@@ -38,7 +37,7 @@ public class GARunner {
 
         /** Default parameters */
         Random rnd = new Random();
-        int populationSize = 250;
+        int populationSize = 35;
         double minError = 0.05;
         int maxIter = 100000;
 
@@ -49,12 +48,12 @@ public class GARunner {
         System.out.println("Parsed...\n");
         IFunction f = new InstanceFunction(problem, calc, checker);
 
-        ISelection<IntArraySolution> selection2 = new Tournament<>(2);
+        // ISelection<IntArraySolution> selection = new Tournament<>(3);
         ISelection<IntArraySolution> selection = new RouletteWheelSelection<>();
         ICross<IntArraySolution> cross = new SinglePointCross(rnd);
         IMutation<IntArraySolution> mutation = new ToggleMutation(rnd, 0.05);
         IDecoder<IntArraySolution> decoder = new PassThroughDecoder();
-        ILocalSearch<IntArraySolution> localSearch = new SwapNeighbors(rnd, 1, 1);
+        ILocalSearch<IntArraySolution> localSearch = new SwapNeighbors(rnd, 16, 1);
 
         List<IntArraySolution> population = generateInitialPopulation(rnd, problem, populationSize);
 
@@ -87,7 +86,7 @@ public class GARunner {
             IntArraySolution s = new IntArraySolution(problem.usedComponents.size(), possibleValues);
             s.randomize(rnd);
             for (int j = 0; j < s.size(); ++j) {
-                if (rnd.nextDouble() < 0.78) {
+                if (rnd.nextDouble() < 0.88) {
                     s.values[j] = sol.getCompLocationsArrray().get(j);
                 }
             }
