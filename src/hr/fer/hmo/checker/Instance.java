@@ -10,8 +10,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map.Entry;
 
 public class Instance {
     public HashMap<Integer, Float> cpuDemands = new HashMap<>();
@@ -22,12 +24,23 @@ public class Instance {
     public HashMap<Integer, Float> nodePower = new HashMap<>();
     public HashMap<Integer, Float> serverIdlePower = new HashMap<>();
     public HashMap<Integer, Float> serverMaxPower = new HashMap<>();
+
     public HashMap<Integer, Integer> serverAllocation = new HashMap<>();
     public HashMap<Integer, ArrayList<Integer>> serviceChains = new HashMap<>();
     public ArrayList<Link> links = new ArrayList<>();
     public ArrayList<LinkDemand> linkDemands = new ArrayList<>();
+
+    public HashMap<Integer, Float> cpuPerNode = new HashMap<>();
+    public HashMap<Integer, Float> memPerNode = new HashMap<>();
+    public HashMap<Integer, ArrayList<Integer>> onNode = new HashMap<>();
     public ArrayList<Integer> usedNodes;
     public ArrayList<Integer> usedComponents;
+    public HashMap<Integer, Float> serverMaxCost = new HashMap<>();
+
+    public HashMap<Pair<Integer, Integer>, ArrayList<Path>> paths = new HashMap<>();
+    public HashMap<Integer, HashMap<Integer, Link>> linksFrom = new HashMap<>();
+
+    public HashMap<Pair<Integer, Integer>, LinkDemand> demanded = new HashMap<>();
 
     public int nServers;
     public int nVms;
@@ -35,9 +48,14 @@ public class Instance {
     public int nNodes;
     public int nServiceChains;
 
+    public float totalCpuAskedFor;
+    public float totalMemAskedFor;
+
     public Instance(final String path) throws IOException {
         read(path);
-
+        calcNodeResources();
+        calcDemands();
+        calcLinksFrom();
         HashSet<Integer> hashUsed = new HashSet<>(serverAllocation.values());
         usedNodes = new ArrayList<>(hashUsed);
 
@@ -46,8 +64,107 @@ public class Instance {
             hashUsed.addAll(chain);
         }
         usedComponents = new ArrayList<>(hashUsed);
+        calcPaths();
+
+        for (LinkDemand d : linkDemands) {
+            int src = d.srcComp;
+            int dest = d.destComp;
+            demanded.put(new Pair<>(src, dest), d);
+        }
 
     }
+
+    private void calcLinksFrom() {
+        for (int i = 0; i <= nNodes; ++i) {
+            linksFrom.put(i, new HashMap<>());
+        }
+
+        for (Link l : links) {
+            linksFrom.get(l.srcNode).put(l.destNode, l);
+        }
+
+    }
+
+    private void calcPaths() {
+        for (int start : usedNodes) {
+            Path p = new Path();
+            p.nodes.add(start);
+            dfs(start, 4, p);
+        }
+    }
+
+    private void dfs(final int start, final int allowedDepth, final Path p) {
+        if (allowedDepth == 0) {
+            return;
+        }
+        for (int e : linksFrom.get(start).keySet()) {
+            p.nodes.add(e);
+
+            if (usedNodes.contains(e)) {
+                Path path = new Path(p.nodes);
+                int s = p.nodes.get(0);
+                Pair<Integer, Integer> pair = new Pair<>(s, e);
+                if (!paths.containsKey(pair)) {
+                    paths.put(pair, new ArrayList<>());
+                }
+                path.calcPathParams(this);
+                paths.get(pair).add(path);
+            }
+            dfs(e, allowedDepth - 1, p);
+            p.nodes.remove(p.nodes.size() - 1);
+        }
+
+    }
+
+    private void calcDemands() {
+        for (Entry<Integer, Float> pair : cpuDemands.entrySet()) {
+            totalCpuAskedFor += pair.getValue();
+        }
+
+        for (Entry<Integer, Float> pair : memDemands.entrySet()) {
+            totalMemAskedFor += pair.getValue();
+        }
+
+    }
+
+    public void calcNodeResources() {
+        for (int i = 0; i <= nNodes; ++i) {
+            cpuPerNode.put(i, Float.valueOf(0));
+            memPerNode.put(i, Float.valueOf(0));
+            onNode.put(i, new ArrayList<>());
+        }
+
+        for (Entry<Integer, Integer> pair : serverAllocation.entrySet()) {
+            int server = pair.getKey();
+            int node = pair.getValue();
+            float cpu = cpuAvailable.get(server);
+            float mem = memAvailable.get(server);
+            cpuPerNode.put(node, cpu + cpuPerNode.get(node));
+            memPerNode.put(node, mem + memPerNode.get(node));
+            onNode.get(node).add(server);
+        }
+        for (int i = 1; i <= nServers; ++i) {
+            serverMaxCost.put(i, calcServerMaxCost(i));
+        }
+
+        for (int i = 0; i <= nNodes; ++i) {
+            onNode.get(i).sort(serverComparator);
+        }
+    }
+
+    public float calcServerMaxCost(final Integer server) {
+        float cost = (serverMaxPower.get(server).floatValue() - serverIdlePower.get(server).floatValue())
+                / cpuAvailable.get(server).floatValue();
+        return cost;
+    }
+
+    Comparator<Integer> serverComparator = new Comparator<Integer>() {
+        @Override
+        public int compare(final Integer s1, final Integer s2) {
+            return Float.compare(serverMaxCost.get(s2), serverMaxCost.get(s1));
+        }
+
+    };
 
     public static int parseVar(final String line) {
         String end = line.split("=")[1].trim();
@@ -57,7 +174,7 @@ public class Instance {
 
     public void read(final String pathToFile) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(new File(pathToFile)));
-        String line = br.readLine();
+        String line = "";
 
         while ((line = br.readLine()) != null) {
             String field = line.split("=")[0].trim();
@@ -86,7 +203,6 @@ public class Instance {
             case "VmDemands":
                 this.readLinkDemands(br);
                 break;
-
             case "P":
                 this.readNodePower(br);
                 break;

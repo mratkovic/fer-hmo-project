@@ -7,14 +7,16 @@ package hr.fer.hmo.checker;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Solution {
-    Map<Integer, Integer> componentLocation = new HashMap();
-    ArrayList<Route> routes = new ArrayList();
+    public Map<Integer, Integer> componentLocation = new HashMap<>();
+    public ArrayList<Route> routes = new ArrayList<>();
 
     public Solution() {
     }
@@ -67,5 +69,41 @@ public class Solution {
 
     public ArrayList<Route> getRoutes() {
         return this.routes;
+    }
+
+    public void dumpToFile(final String path, final Instance problem) throws IOException {
+        FileWriter fw = new FileWriter(path);
+        fw.write("x=[\n");
+        for (int i = 1; i <= problem.nVms; ++i) {
+            int[] oneHot = new int[problem.nServers];
+            Arrays.fill(oneHot, 0);
+            if (componentLocation.containsKey(i)) {
+                oneHot[i] = componentLocation.get(i);
+            }
+            fw.write(Arrays.toString(oneHot) + "\n");
+        }
+        fw.write("];\n\n");
+        fw.write("routes={\n");
+        for (int i = 0; i < routes.size(); ++i) {
+            Route r = routes.get(i);
+            fw.write(r.toString());
+            if (i != routes.size() - 1) {
+                fw.write(",");
+            }
+            fw.write("\n");
+        }
+        fw.write("};\n");
+        fw.close();
+
+    }
+
+    public ArrayList<Integer> getCompLocationsArrray() {
+        ArrayList<Integer> loc = new ArrayList<>();
+        for (int i = 1; i <= componentLocation.size(); ++i) {
+            loc.add(componentLocation.get(i));
+        }
+
+        return loc;
+
     }
 }

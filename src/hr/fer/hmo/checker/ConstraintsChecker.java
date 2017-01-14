@@ -39,11 +39,8 @@ public class ConstraintsChecker {
                     break;
                 }
                 if (!found) {
-                    // this.app.textArea.append("Route from component " +
-                    // this.instance.serviceChains.get(chain).get(j)
-                    // + " to component " +
-                    // this.instance.serviceChains.get(chain).get(j + 1) + " is
-                    // missing!\n");
+                    System.out.println("Route from component " + this.instance.serviceChains.get(chain).get(j)
+                            + " to component " + this.instance.serviceChains.get(chain).get(j + 1) + " is missing!\n");
                     return false;
                 }
             }
@@ -60,9 +57,8 @@ public class ConstraintsChecker {
                     found = true;
                 }
                 if (!found) {
-                    // this.app.textArea.append("Link from node " +
-                    // route.getPath().get(i) + " to node "
-                    // + route.getPath().get(i + 1) + " does not exist!\n");
+                    System.out.println("Link from node " + route.getPath().get(i) + " to node "
+                            + route.getPath().get(i + 1) + " does not exist!\n");
                     return false;
                 }
             }
@@ -70,20 +66,16 @@ public class ConstraintsChecker {
         for (Route route2 : s.getRoutes()) {
             if (this.instance.serverAllocation.get(s.componentLocation.get(route2.getSrcComp())) != route2.getPath()
                     .get(0)) {
-                // this.app.textArea.append("Route from " + route2.getSrcComp()
-                // + " to " + route2.getDestComp()
-                // + " starts with the node source component\n is not allocated
-                // to!\n");
+                System.out.println("Route from " + route2.getSrcComp() + " to " + route2.getDestComp()
+                        + " starts with the node source component\n is not allocated to!\n");
                 return false;
             }
             if (this.instance.serverAllocation.get(s.componentLocation.get(route2.getDestComp())) == route2.getPath()
                     .get(route2.getPath().size() - 1)) {
                 continue;
             }
-            // this.app.textArea.append("Route from " + route2.getSrcComp() + "
-            // to " + route2.getDestComp()
-            // + " ends with the node destination component\n is not allocated
-            // to!\n");
+            System.out.println("Route from " + route2.getSrcComp() + "to " + route2.getDestComp()
+                    + " ends with the node destination component\n is not allocated to!\n");
             return false;
         }
         return true;
@@ -123,9 +115,8 @@ public class ConstraintsChecker {
             if (chainLatency.get(chn).floatValue() <= instance.maxLatency.get(chn).floatValue()) {
                 continue;
             }
-            // this.app.textArea.append("Service chain " + chn + ": Total
-            // latency (" + chainLatency.get(chn) + ") > allowed latency (" +
-            // this.instance.maxLatency.get(chn) + ") !\n");
+            System.out.println("Service chain " + chn + ": Total latency (" + chainLatency.get(chn)
+                    + ") > allowed latency (" + this.instance.maxLatency.get(chn) + ") !\n");
             return false;
         }
         return true;
@@ -158,10 +149,8 @@ public class ConstraintsChecker {
             if (link.getTraffic() <= link.getCapacity()) {
                 continue;
             }
-            // this.app.textArea.append("Link from node " + link.getSrcNode() +
-            // " to node " + link.getDestNode() + ": Traffic demand (" +
-            // link.getTraffic() + ") > link capacity (" + link.getCapacity() +
-            // ") !\n");
+            System.out.println("Link from node " + link.getSrcNode() + " to node " + link.getDestNode()
+                    + ": Traffic demand (" + link.getTraffic() + ") > link capacity (" + link.getCapacity() + ") !\n");
             return false;
         }
         return true;
@@ -188,10 +177,9 @@ public class ConstraintsChecker {
             if (cpuDemandPerServer.get(key).floatValue() <= this.instance.cpuAvailable.get(key).floatValue()) {
                 continue;
             }
+            System.out.println("Server " + key + ": CPU demand (" + cpuDemandPerServer.get(key) + ") > available CPU ("
+                    + this.instance.cpuAvailable.get(key) + ") !\n");
             return false;
-            // this.app.textArea.append("Server " + key + ": CPU demand (" +
-            // cpuDemandPerServer.get(key) + ") > available CPU (" +
-            // this.instance.cpuAvailable.get(key) + ") !\n");
         }
 
         HashMap<Integer, Float> memDemandPerServer = new HashMap<>();
@@ -214,10 +202,9 @@ public class ConstraintsChecker {
             if (memDemandPerServer.get(key2).floatValue() <= this.instance.memAvailable.get(key2).floatValue()) {
                 continue;
             }
+            System.out.println("Server " + key2 + ": Memory demand (" + memDemandPerServer.get(key2)
+                    + ") > available memory (" + this.instance.memAvailable.get(key2) + ") !\n");
             return false;
-            // this.app.textArea.append("Server " + key2 + ": Memory demand (" +
-            // memDemandPerServer.get(key2) + ") > available memory (" +
-            // this.instance.memAvailable.get(key2) + ") !\n");
         }
         return true;
     }
