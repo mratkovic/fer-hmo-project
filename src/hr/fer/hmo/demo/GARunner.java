@@ -10,6 +10,8 @@ import hr.fer.hmo.checker.ConstraintsChecker;
 import hr.fer.hmo.checker.FitnessCalculator;
 import hr.fer.hmo.checker.Instance;
 import hr.fer.hmo.checker.Solution;
+import hr.fer.zamris.optjava.localsearch.ILocalSearch;
+import hr.fer.zamris.optjava.localsearch.SwapNeighbors;
 import hr.fer.zemris.optjava.dz4.function.IFunction;
 import hr.fer.zemris.optjava.dz4.function.InstanceFunction;
 import hr.fer.zemris.optjava.dz4.ga.GenerationGA;
@@ -36,7 +38,7 @@ public class GARunner {
 
         /** Default parameters */
         Random rnd = new Random();
-        int populationSize = 100;
+        int populationSize = 250;
         double minError = 0.05;
         int maxIter = 100000;
 
@@ -47,16 +49,17 @@ public class GARunner {
         System.out.println("Parsed...\n");
         IFunction f = new InstanceFunction(problem, calc, checker);
 
-        ISelection<IntArraySolution> selection2 = new Tournament<>(3);
+        ISelection<IntArraySolution> selection2 = new Tournament<>(2);
         ISelection<IntArraySolution> selection = new RouletteWheelSelection<>();
         ICross<IntArraySolution> cross = new SinglePointCross(rnd);
-        IMutation<IntArraySolution> mutation = new ToggleMutation(rnd, 1);
+        IMutation<IntArraySolution> mutation = new ToggleMutation(rnd, 0.05);
         IDecoder<IntArraySolution> decoder = new PassThroughDecoder();
+        ILocalSearch<IntArraySolution> localSearch = new SwapNeighbors(rnd, 1, 1);
 
         List<IntArraySolution> population = generateInitialPopulation(rnd, problem, populationSize);
 
         GenerationGA<IntArraySolution> ga = new GenerationGA<>(f, decoder, populationSize, minError, maxIter, selection,
-                mutation, cross, rnd, 2, true, PRINT_CNT);
+                mutation, cross, localSearch, rnd, 1, true, PRINT_CNT);
 
         ga.run(population);
 
@@ -84,7 +87,7 @@ public class GARunner {
             IntArraySolution s = new IntArraySolution(problem.usedComponents.size(), possibleValues);
             s.randomize(rnd);
             for (int j = 0; j < s.size(); ++j) {
-                if (rnd.nextBoolean()) {
+                if (rnd.nextDouble() < 0.78) {
                     s.values[j] = sol.getCompLocationsArrray().get(j);
                 }
             }

@@ -72,6 +72,18 @@ public class Instance {
             demanded.put(new Pair<>(src, dest), d);
         }
 
+        for (ArrayList<Integer> servers : onNode.values()) {
+            servers.sort(new Comparator<Integer>() {
+
+                @Override
+                public int compare(final Integer o1, final Integer o2) {
+                    return Float.compare(serverMaxCost.get(o1), serverMaxCost.get(o2));
+                }
+
+            });
+
+        }
+
     }
 
     private void calcLinksFrom() {

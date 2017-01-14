@@ -7,7 +7,6 @@ import hr.fer.hmo.checker.ConstraintsChecker;
 import hr.fer.hmo.checker.FitnessCalculator;
 import hr.fer.hmo.checker.Instance;
 import hr.fer.hmo.checker.Solution;
-import hr.fer.zemris.optjava.dz4.function.InstanceFunction;
 
 public class Demo {
     public static void main(final String[] args) throws IOException {
@@ -69,9 +68,9 @@ public class Demo {
         // }
 
         System.out.println(sol.getCompLocationsArrray());
-        InstanceFunction f = new InstanceFunction(problem, calc, checker, true);
-        double cost = f.valueAt(sol.getCompLocationsArrray().stream().mapToInt(i -> i).toArray());
-        System.out.println(cost);
-        System.out.println(checker.check(sol));
+        long startTime = System.currentTimeMillis();
+
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        System.out.println(estimatedTime);
     }
 }
