@@ -1,6 +1,7 @@
 package hr.fer.zemris.optjava.dz4.ga;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
@@ -45,9 +46,24 @@ public abstract class AbstractGA<T extends SingleObjectiveSolution> {
         this.mutation = mutation;
         this.cross = cross;
         this.rnd = rnd;
-        this.fitnessFunction = values -> {
-            int a = minimize ? -1 : 1;
-            return a * f.valueAt(values);
+        this.fitnessFunction = new IFunction() {
+
+            @Override
+            public double valueAt(final int[] sol) {
+                int a = minimize ? -1 : 1;
+                return a * f.valueAt(sol);
+            }
+
+            @Override
+            public int numberOfVariables() {
+                return f.numberOfVariables();
+            }
+
+            @Override
+            public void saveSolution(final int[] sol, final String path) {
+                f.saveSolution(sol, path);
+
+            }
         };
         this.printCnt = printCnt;
 
@@ -82,10 +98,20 @@ public abstract class AbstractGA<T extends SingleObjectiveSolution> {
         while (it < maxIteration && best.value > minValue) {
             population = runSingleIteration(population);
             T newBest = population.get(0);
+            HashSet<T> pop = new HashSet<>(population);
 
             // if no change last N iterations, reduce mutation
             testForMutationUpdate(best, newBest);
-            printStatus(newBest, it);
+
+            if (it % printCnt == 0) {
+                System.out.println(
+                        it + "\t\tBest ->  Fitness: " + best.fitness + "; Cost: " + best.value + ";" + pop.size());
+            }
+            if (it % 100 == 0) {
+                String dumpPath = String.format("solutions/best_%d_%f.txt", it, best.value);
+                f.saveSolution(decoder.decode(best), dumpPath);
+                System.out.println("Solution saved to" + dumpPath);
+            }
             best = newBest;
 
             ++it;
@@ -94,13 +120,6 @@ public abstract class AbstractGA<T extends SingleObjectiveSolution> {
         System.out.println("Iter:\t" + it);
         System.out.println("Best value: " + best.value);
         System.out.println("Time:" + (System.nanoTime() - startTime) / 1e9 + "s");
-    }
-
-    private void printStatus(final T newBest, final int it) {
-        if (it % printCnt == 0) {
-            System.out.println(it + "\t\tBest ->  Fitness: " + best.fitness + "; Cost: " + best.value);
-        }
-
     }
 
     protected abstract List<T> runSingleIteration(final List<T> population);

@@ -1,8 +1,8 @@
 package hr.fer.hmo.checker;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 public class Path {
     public ArrayList<Integer> nodes;
@@ -58,14 +58,14 @@ public class Path {
 
     public void calcPathParams(final Instance problem) {
         totalCost = 0;
-        capacity = 0;
+        capacity = Float.MAX_VALUE;
 
         for (int i = 1; i < nodes.size(); ++i) {
             int s = nodes.get(i - 1);
             int e = nodes.get(i);
 
             totalCost += problem.linksFrom.get(s).get(e).powerConsumption;
-            totalCost += problem.linksFrom.get(s).get(e).capacity;
+            capacity = Math.min(capacity, problem.linksFrom.get(s).get(e).capacity);
         }
         usedNodes = new HashSet<>(nodes);
         for (Integer server : usedNodes) {
@@ -75,7 +75,7 @@ public class Path {
 
     }
 
-    public void reduceCost(final List<Integer> servers, final Instance problem) {
+    public void reduceCost(final Collection<Integer> servers, final Instance problem) {
 
         for (Integer server : servers) {
             if (usedNodes.contains(server)) {

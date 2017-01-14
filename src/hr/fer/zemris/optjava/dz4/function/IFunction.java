@@ -4,4 +4,8 @@ public interface IFunction {
 
     public double valueAt(int[] sol);
 
+    public int numberOfVariables();
+
+    public void saveSolution(int[] sol, String path);
+
 }

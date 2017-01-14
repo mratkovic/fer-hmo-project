@@ -78,9 +78,9 @@ public class Solution {
             int[] oneHot = new int[problem.nServers];
             Arrays.fill(oneHot, 0);
             if (componentLocation.containsKey(i)) {
-                oneHot[i] = componentLocation.get(i);
+                oneHot[componentLocation.get(i) - 1] = 1;
             }
-            fw.write(Arrays.toString(oneHot) + "\n");
+            fw.write(Arrays.toString(oneHot).replaceAll(" ", "") + "\n");
         }
         fw.write("];\n\n");
         fw.write("routes={\n");

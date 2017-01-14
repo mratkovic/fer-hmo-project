@@ -31,6 +31,11 @@ public class Link {
         this.destNode = destNode;
     }
 
+    public void reset() {
+        this.traffic = 0.0F;
+        this.active = false;
+    }
+
     public int getSrcNode() {
         return this.srcNode;
     }

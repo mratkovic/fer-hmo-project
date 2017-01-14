@@ -2,10 +2,13 @@ package hr.fer.hmo.demo;
 
 import java.io.IOException;
 import java.util.Map.Entry;
+import java.util.Scanner;
 
 import hr.fer.hmo.checker.ConstraintsChecker;
 import hr.fer.hmo.checker.FitnessCalculator;
 import hr.fer.hmo.checker.Instance;
+import hr.fer.hmo.checker.Pair;
+import hr.fer.hmo.checker.Path;
 import hr.fer.hmo.checker.Solution;
 import hr.fer.zemris.optjava.dz4.function.InstanceFunction;
 
@@ -47,21 +50,20 @@ public class Demo {
         System.out.println();
         System.out.println("CPU needed:" + problem.totalCpuAskedFor);
         System.out.println("MEM needed:" + problem.totalMemAskedFor);
+        Scanner sc = new Scanner(System.in);
+        for (Pair<Integer, Integer> pair : problem.paths.keySet()) {
+            System.out.println("\n\nPaths from" + pair.first + " to " + pair.second);
 
-        // for (Pair<Integer, Integer> pair : problem.paths.keySet()) {
-        // System.out.println("\n\nPaths from" + pair.first + " to " +
-        // pair.second);
-        //
-        // for (Path p : problem.paths.get(pair)) {
-        // System.out.println(p);
-        // }
-        // }
+            for (Path p : problem.paths.get(pair)) {
+                System.out.println(p);
+            }
+            sc.nextLine();
+        }
 
         System.out.println(sol.getCompLocationsArrray());
-
         InstanceFunction f = new InstanceFunction(problem, calc, checker);
         double cost = f.valueAt(sol.getCompLocationsArrray().stream().mapToInt(i -> i).toArray());
         System.out.println(cost);
-
+        System.out.println(checker.check(sol));
     }
 }

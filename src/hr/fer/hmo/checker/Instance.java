@@ -89,7 +89,26 @@ public class Instance {
         for (int start : usedNodes) {
             Path p = new Path();
             p.nodes.add(start);
-            dfs(start, 4, p);
+            dfs(start, 7, p);
+        }
+
+        for (ArrayList<Path> ps : paths.values()) {
+
+            ps.sort(new Comparator<Path>() {
+
+                @Override
+                public int compare(final Path o1, final Path o2) {
+                    int o = Float.compare(o1.totalCost, o2.totalCost);
+                    if (o != 0) {
+                        return o;
+                    }
+                    o = Float.compare(o1.capacity, o2.capacity);
+                    if (o != 0) {
+                        return -o;
+                    }
+                    return Integer.compare(o1.nodes.size(), o2.nodes.size());
+                }
+            });
         }
     }
 
@@ -98,6 +117,9 @@ public class Instance {
             return;
         }
         for (int e : linksFrom.get(start).keySet()) {
+            if (p.nodes.contains(e)) {
+                continue;
+            }
             p.nodes.add(e);
 
             if (usedNodes.contains(e)) {
@@ -374,6 +396,13 @@ public class Instance {
 
         for (int i = 0; i < var6.length; ++i) {
             this.memDemands.put(Integer.valueOf(i + 1), Float.valueOf(Float.parseFloat(var6[i])));
+        }
+
+    }
+
+    public void resetTmp() {
+        for (Link l : links) {
+            l.reset();
         }
 
     }

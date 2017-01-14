@@ -4,14 +4,23 @@ import java.util.HashMap;
 
 public class ConstraintsChecker {
     Instance instance;
+    boolean verbose;
+
+    public ConstraintsChecker(final Instance instance, final boolean verbose) {
+        this.verbose = verbose;
+        this.instance = instance;
+    }
 
     public ConstraintsChecker(final Instance instance) {
+        this.verbose = false;
         this.instance = instance;
     }
 
     public boolean check(final Solution s) {
-        return checkRoutesValid(s) && checkServerAllocation(s) && checkResourceConstraints(s) && checkLinkConstraints(s)
-                && checkLatencyConstraints(s);
+        boolean valid = checkRoutesValid(s) && checkServerAllocation(s) && checkResourceConstraints(s)
+                && checkLinkConstraints(s) && checkLatencyConstraints(s);
+        instance.resetTmp();
+        return valid;
 
     }
 
@@ -22,6 +31,13 @@ public class ConstraintsChecker {
             }
         }
         return true;
+    }
+
+    public void print(final String msg) {
+        if (verbose) {
+            System.out.println(msg);
+        }
+
     }
 
     private boolean checkRoutesValid(final Solution s) {
@@ -39,8 +55,8 @@ public class ConstraintsChecker {
                     break;
                 }
                 if (!found) {
-                    System.out.println("Route from component " + this.instance.serviceChains.get(chain).get(j)
-                            + " to component " + this.instance.serviceChains.get(chain).get(j + 1) + " is missing!\n");
+                    print("Route from component " + this.instance.serviceChains.get(chain).get(j) + " to component "
+                            + this.instance.serviceChains.get(chain).get(j + 1) + " is missing!\n");
                     return false;
                 }
             }
@@ -57,8 +73,8 @@ public class ConstraintsChecker {
                     found = true;
                 }
                 if (!found) {
-                    System.out.println("Link from node " + route.getPath().get(i) + " to node "
-                            + route.getPath().get(i + 1) + " does not exist!\n");
+                    print("Link from node " + route.getPath().get(i) + " to node " + route.getPath().get(i + 1)
+                            + " does not exist!\n");
                     return false;
                 }
             }
@@ -66,7 +82,7 @@ public class ConstraintsChecker {
         for (Route route2 : s.getRoutes()) {
             if (this.instance.serverAllocation.get(s.componentLocation.get(route2.getSrcComp())) != route2.getPath()
                     .get(0)) {
-                System.out.println("Route from " + route2.getSrcComp() + " to " + route2.getDestComp()
+                print("Route from " + route2.getSrcComp() + " to " + route2.getDestComp()
                         + " starts with the node source component\n is not allocated to!\n");
                 return false;
             }
@@ -74,7 +90,7 @@ public class ConstraintsChecker {
                     .get(route2.getPath().size() - 1)) {
                 continue;
             }
-            System.out.println("Route from " + route2.getSrcComp() + "to " + route2.getDestComp()
+            print("Route from " + route2.getSrcComp() + "to " + route2.getDestComp()
                     + " ends with the node destination component\n is not allocated to!\n");
             return false;
         }
@@ -110,13 +126,13 @@ public class ConstraintsChecker {
         }
 
         for (int chn : chainLatency.keySet()) {
-            // System.out.println("Chain: " + chn + " Latency: " +
+            // print("Chain: " + chn + " Latency: " +
             // chainLatency.get(chn));
             if (chainLatency.get(chn).floatValue() <= instance.maxLatency.get(chn).floatValue()) {
                 continue;
             }
-            System.out.println("Service chain " + chn + ": Total latency (" + chainLatency.get(chn)
-                    + ") > allowed latency (" + this.instance.maxLatency.get(chn) + ") !\n");
+            print("Service chain " + chn + ": Total latency (" + chainLatency.get(chn) + ") > allowed latency ("
+                    + this.instance.maxLatency.get(chn) + ") !\n");
             return false;
         }
         return true;
@@ -142,15 +158,15 @@ public class ConstraintsChecker {
             }
         }
         for (Link link : this.instance.links) {
-            // System.out.println("Link from node " + link.getSrcNode() + " to
+            // print("Link from node " + link.getSrcNode() + " to
             // node " + link.getDestNode()
             // + " Link traffic: " + link.getTraffic() + " link capacity: " +
             // link.getCapacity());
             if (link.getTraffic() <= link.getCapacity()) {
                 continue;
             }
-            System.out.println("Link from node " + link.getSrcNode() + " to node " + link.getDestNode()
-                    + ": Traffic demand (" + link.getTraffic() + ") > link capacity (" + link.getCapacity() + ") !\n");
+            print("Link from node " + link.getSrcNode() + " to node " + link.getDestNode() + ": Traffic demand ("
+                    + link.getTraffic() + ") > link capacity (" + link.getCapacity() + ") !\n");
             return false;
         }
         return true;
@@ -177,7 +193,7 @@ public class ConstraintsChecker {
             if (cpuDemandPerServer.get(key).floatValue() <= this.instance.cpuAvailable.get(key).floatValue()) {
                 continue;
             }
-            System.out.println("Server " + key + ": CPU demand (" + cpuDemandPerServer.get(key) + ") > available CPU ("
+            print("Server " + key + ": CPU demand (" + cpuDemandPerServer.get(key) + ") > available CPU ("
                     + this.instance.cpuAvailable.get(key) + ") !\n");
             return false;
         }
@@ -202,8 +218,8 @@ public class ConstraintsChecker {
             if (memDemandPerServer.get(key2).floatValue() <= this.instance.memAvailable.get(key2).floatValue()) {
                 continue;
             }
-            System.out.println("Server " + key2 + ": Memory demand (" + memDemandPerServer.get(key2)
-                    + ") > available memory (" + this.instance.memAvailable.get(key2) + ") !\n");
+            print("Server " + key2 + ": Memory demand (" + memDemandPerServer.get(key2) + ") > available memory ("
+                    + this.instance.memAvailable.get(key2) + ") !\n");
             return false;
         }
         return true;

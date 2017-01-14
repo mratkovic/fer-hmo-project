@@ -1,5 +1,6 @@
 package hr.fer.zemris.optjava.dz4.function;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,16 +20,40 @@ public class InstanceFunction implements IFunction {
     public Instance problem;
     public FitnessCalculator calc;
     public ConstraintsChecker checker;
+    boolean verbose;
 
     public InstanceFunction(final Instance problem, final FitnessCalculator calc, final ConstraintsChecker checker) {
+        this(problem, calc, checker, false);
+    }
+
+    public void print(final String msg) {
+        if (verbose) {
+            System.out.println(msg);
+        }
+
+    }
+
+    public InstanceFunction(final Instance problem, final FitnessCalculator calc, final ConstraintsChecker checker,
+            final boolean verbose) {
         super();
         this.problem = problem;
         this.calc = calc;
         this.checker = checker;
+        this.verbose = verbose;
     }
 
     @Override
     public double valueAt(final int[] values) {
+        Solution sol = findSolution(values);
+
+        if (sol == null || !checker.check(sol)) {
+            return Float.POSITIVE_INFINITY;
+        } else {
+            return calc.calculate(sol);
+        }
+    }
+
+    private Solution findSolution(final int[] values) {
         Solution sol = new Solution();
         if (values.length != problem.usedComponents.size()) {
             throw new IllegalArgumentException("Invalid chromosome size");
@@ -40,14 +65,11 @@ public class InstanceFunction implements IFunction {
 
         HashMap<Pair<Integer, Integer>, Float> pathsNeeded = calcNeededPaths(sol);
         HashMap<Pair<Integer, Integer>, ArrayList<Integer>> foundPaths = findPaths(pathsNeeded);
-        assignPaths(sol, foundPaths);
-
-        boolean valid = checker.check(sol);
-        if (!valid) {
-            return Float.POSITIVE_INFINITY;
-        } else {
-            return calc.calculate(sol);
+        if (foundPaths == null) {
+            return null;
         }
+        assignPaths(sol, foundPaths);
+        return sol;
     }
 
     private void assignPaths(final Solution sol, final HashMap<Pair<Integer, Integer>, ArrayList<Integer>> foundPaths) {
@@ -69,7 +91,7 @@ public class InstanceFunction implements IFunction {
                 int n2 = problem.serverAllocation.get(server2);
                 Pair<Integer, Integer> link = new Pair<>(n1, n2);
                 if (n1 != n2) {
-                    System.out.printf("%d %d goes %s\n", s, e, foundPaths.get(link));
+                    print(String.format("%d %d goes %s\n", s, e, foundPaths.get(link)));
                     sol.routes.add(new Route(s, e, foundPaths.get(link)));
                 } else {
                     ArrayList<Integer> path = new ArrayList<>();
@@ -85,13 +107,13 @@ public class InstanceFunction implements IFunction {
         HashSet<Pair<Integer, Integer>> seen = new HashSet<>();
 
         for (ArrayList<Integer> chain : problem.serviceChains.values()) {
-            System.out.println("\nChain" + chain);
+            print("\nChain" + chain);
             for (int i = 1; i < chain.size(); ++i) {
                 int s = chain.get(i - 1);
                 int e = chain.get(i);
                 Pair<Integer, Integer> linkComps = new Pair<>(s, e);
                 if (seen.contains(linkComps)) {
-                    System.out.printf("Seen %d to %d\n", s, e);
+                    print(String.format("Seen %d to %d\n", s, e));
                     continue;
                 }
                 seen.add(linkComps);
@@ -110,8 +132,8 @@ public class InstanceFunction implements IFunction {
                     float neededBefore = pathsNeeded.get(linkNodes);
 
                     float neededExtra = problem.demanded.get(linkComps).getTraffic();
-                    System.out.printf("%d to %d (%d %d) needed extra %f (total: %f)\n", n1, n2, s, e, neededExtra,
-                            neededBefore + neededExtra);
+                    print(String.format("%d to %d (%d %d) needed extra %f(total: %f)\n", n1, n2, s, e, neededExtra,
+                            neededBefore + neededExtra));
                     pathsNeeded.put(linkNodes, neededBefore + neededExtra);
 
                 } else {
@@ -121,7 +143,7 @@ public class InstanceFunction implements IFunction {
                     }
                     float neededBefore = pathsNeeded.get(linkNodes);
 
-                    System.out.printf("%d to %d (%d %d) , same node (total: %f)\n", n1, n2, s, e, neededBefore);
+                    print(String.format("%d to %d (%d %d) , same node (total:%f)\n", n1, n2, s, e, neededBefore));
                 }
             }
         }
@@ -130,8 +152,19 @@ public class InstanceFunction implements IFunction {
 
     private HashMap<Pair<Integer, Integer>, ArrayList<Integer>> findPaths(
             final HashMap<Pair<Integer, Integer>, Float> pathsNeeded) {
+        HashSet<Integer> usedNodes = new HashSet<>();
+        for (Pair<Integer, Integer> pair : pathsNeeded.keySet()) {
+            int n1 = pair.first;
+            int n2 = pair.second;
+            usedNodes.add(n1);
+            usedNodes.add(n2);
+        }
 
         for (ArrayList<Path> ps : problem.paths.values()) {
+            for (Path p : ps) {
+                p.reduceCost(usedNodes, problem);
+            }
+
             ps.sort(new Comparator<Path>() {
 
                 @Override
@@ -147,6 +180,10 @@ public class InstanceFunction implements IFunction {
                     return Integer.compare(o1.nodes.size(), o2.nodes.size());
                 }
             });
+
+            for (Path p : ps) {
+                p.calcPathParams(problem);
+            }
         }
 
         List<Pair<Integer, Integer>> pairs = new ArrayList<>(pathsNeeded.keySet());
@@ -164,15 +201,36 @@ public class InstanceFunction implements IFunction {
             for (Path p : problem.paths.get(pair)) {
                 if (p.capacity >= needed) {
                     foundPaths.put(pair, p.nodes);
-                    System.out.println(s + "," + e + " -- " + p.nodes);
+                    print(s + "," + e + " -- " + p.nodes);
                     found = true;
                     break;
                 }
             }
             if (!found) {
-                System.out.println("Not found " + s + " to " + e + " needed " + needed);
+                print("Not found " + s + " to " + e + " needed " + needed);
+                return null;
             }
         }
         return foundPaths;
+    }
+
+    // TODO
+    @Override
+    public int numberOfVariables() {
+        return problem.usedComponents.size();
+    }
+
+    @Override
+    public void saveSolution(final int[] values, final String path) {
+        Solution sol = findSolution(values);
+        if (sol == null) {
+            return;
+        }
+        try {
+            sol.dumpToFile(path, problem);
+        } catch (IOException e) {
+            System.err.println("Could not save");
+        }
+
     }
 }

@@ -6,6 +6,7 @@ package hr.fer.hmo.checker;
 //
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Route {
     int srcComp;
@@ -66,6 +67,12 @@ public class Route {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return "<" + srcComp + "," + destComp + "," + Arrays.toString(path.stream().toArray()).replaceAll(" ", "")
+                + ">";
     }
 
 }
