@@ -16,11 +16,15 @@ public class ConstraintsChecker {
         this.instance = instance;
     }
 
-    public boolean check(final Solution s) {
-        boolean valid = checkRoutesValid(s) && checkServerAllocation(s) && checkResourceConstraints(s)
-                && checkLinkConstraints(s) && checkLatencyConstraints(s);
+    public int check(final Solution s) {
+        boolean valid = checkRoutesValid(s) && checkServerAllocation(s) && checkLatencyConstraints(s);
+        if (!valid) {
+            return 1000;
+        }
+        int serverWrong = checkResourceConstraints(s);
+        int linkWrong = checkLinkConstraints(s);
         instance.resetTmp();
-        return valid;
+        return serverWrong + linkWrong;
 
     }
 
@@ -138,7 +142,7 @@ public class ConstraintsChecker {
         return true;
     }
 
-    private boolean checkLinkConstraints(final Solution s) {
+    private int checkLinkConstraints(final Solution s) {
         for (Route route : s.getRoutes()) {
 
             for (int i = 0; i < route.getPath().size() - 1; ++i) {
@@ -157,6 +161,7 @@ public class ConstraintsChecker {
                 }
             }
         }
+        int wrongCnt = 0;
         for (Link link : this.instance.links) {
             print("Link from node " + link.getSrcNode() + " to node " + link.getDestNode() + " Link traffic: "
                     + link.getTraffic() + " link capacity: " + link.getCapacity());
@@ -165,12 +170,12 @@ public class ConstraintsChecker {
             }
             print("Link from node " + link.getSrcNode() + " to node " + link.getDestNode() + ": Traffic demand ("
                     + link.getTraffic() + ") > link capacity (" + link.getCapacity() + ") !\n");
-            return false;
+            wrongCnt++;
         }
-        return true;
+        return wrongCnt;
     }
 
-    private boolean checkResourceConstraints(final Solution s) {
+    private int checkResourceConstraints(final Solution s) {
         HashMap<Integer, Float> cpuDemandPerServer = new HashMap<>();
         for (Integer keyServ : this.instance.cpuAvailable.keySet()) {
             float currentDemand = 0.0f;
@@ -187,6 +192,7 @@ public class ConstraintsChecker {
                                 / 100.0f));
             }
         }
+        int wrongCnt = 0;
         for (Integer key : cpuDemandPerServer.keySet()) {
             if (cpuDemandPerServer.get(key).floatValue() <= this.instance.cpuAvailable.get(key).floatValue()) {
 
@@ -194,7 +200,7 @@ public class ConstraintsChecker {
                         + this.instance.cpuAvailable.get(key) + ") !");
                 continue;
             }
-            return false;
+            wrongCnt++;
         }
 
         HashMap<Integer, Float> memDemandPerServer = new HashMap<>();
@@ -219,8 +225,8 @@ public class ConstraintsChecker {
             }
             print("Server " + key2 + ": Memory demand (" + memDemandPerServer.get(key2) + ") > available memory ("
                     + this.instance.memAvailable.get(key2) + ") !\n");
-            return false;
+            wrongCnt++;
         }
-        return true;
+        return wrongCnt;
     }
 }

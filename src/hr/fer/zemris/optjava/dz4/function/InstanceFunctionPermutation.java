@@ -50,11 +50,15 @@ public class InstanceFunctionPermutation implements IFunction {
     public double valueAt(final int[] values) {
         Solution sol = findSolution(values);
 
-        if (sol == null || !checker.check(sol)) {
+        if (sol == null) {
             return Float.POSITIVE_INFINITY;
-        } else {
-            return calc.calculate(sol);
         }
+        int penalty = checker.check(sol);
+        if (penalty > 500) {
+            return Float.POSITIVE_INFINITY;
+        }
+
+        return calc.calculate(sol) + penalty * 1000;
     }
 
     private Solution findSolution(final int[] values) {

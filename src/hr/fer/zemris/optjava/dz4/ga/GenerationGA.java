@@ -1,5 +1,6 @@
 package hr.fer.zemris.optjava.dz4.ga;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -141,10 +142,18 @@ public class GenerationGA<T extends SingleObjectiveSolution> {
             T p1 = selection.selectFromPopulation(population, rnd);
             T p2 = selection.selectFromPopulation(population, rnd);
             List<T> children = cross.crossParents(p1, p2);
-            // T bestChild = mutation.mutate(p1);
+            T bestChild = mutation.mutate(p1);
             List<T> neighbors = localSearch.neighbors(children.get(0));
             // neighbors.add(bestChild);
-            // evaluatePopulation(neighbors);
+            evaluatePopulation(neighbors);
+            for (int i = 0; i < neighbors.size(); ++i) {
+                if (neighbors.get(i).value < 4020
+                        && !new File((String.format("solutions/%f.txt", neighbors.get(i).value))).isFile()) {
+                    f.saveSolution(decoder.decode(neighbors.get(i)),
+                            String.format("solutions/%f.txt", neighbors.get(i).value));
+                    System.out.println("SAVED" + String.format("solutions/%f.txt", neighbors.get(i).value));
+                }
+            }
             nextGen.add(neighbors.get(0));
             // nextGen.add(bestChild);
 

@@ -23,6 +23,7 @@ import hr.fer.zemris.optjava.ga.mutation.IMutation;
 import hr.fer.zemris.optjava.ga.mutation.ToggleMutation;
 import hr.fer.zemris.optjava.ga.selection.ISelection;
 import hr.fer.zemris.optjava.ga.selection.RouletteWheelSelection;
+import hr.fer.zemris.optjava.ga.selection.Tournament;
 import hr.fer.zemris.optjava.ga.solution.IntArraySolution;
 
 public class GARunner {
@@ -37,7 +38,7 @@ public class GARunner {
 
         /** Default parameters */
         Random rnd = new Random();
-        int populationSize = 35;
+        int populationSize = 64;
         double minError = 0.05;
         int maxIter = 100000;
 
@@ -48,12 +49,12 @@ public class GARunner {
         System.out.println("Parsed...\n");
         IFunction f = new InstanceFunction(problem, calc, checker);
 
-        // ISelection<IntArraySolution> selection = new Tournament<>(3);
-        ISelection<IntArraySolution> selection = new RouletteWheelSelection<>();
+        ISelection<IntArraySolution> selection = new Tournament<>(3);
+        ISelection<IntArraySolution> selection2 = new RouletteWheelSelection<>();
         ICross<IntArraySolution> cross = new SinglePointCross(rnd);
         IMutation<IntArraySolution> mutation = new ToggleMutation(rnd, 0.05);
         IDecoder<IntArraySolution> decoder = new PassThroughDecoder();
-        ILocalSearch<IntArraySolution> localSearch = new SwapNeighbors(rnd, 16, 1);
+        ILocalSearch<IntArraySolution> localSearch = new SwapNeighbors(rnd, 1, 1);
 
         List<IntArraySolution> population = generateInitialPopulation(rnd, problem, populationSize);
 
@@ -67,7 +68,7 @@ public class GARunner {
     private static List<IntArraySolution> generateInitialPopulation(final Random rnd, final Instance problem,
             final int populationSize) throws IOException {
 
-        int tabooNode = 1;
+        int tabooNode = -1;
         ArrayList<Integer> availableServers = new ArrayList<>();
         for (int i = 1; i <= problem.nNodes; ++i) {
             if (i != tabooNode) {
@@ -79,14 +80,14 @@ public class GARunner {
         for (int i = 0; i < possibleValues.length; ++i) {
             possibleValues[i] = availableServers.get(i);
         }
-        String solPath = "./sol_4292_92777778_1484151396.txt";
+        String solPath = "start.txt";
         Solution sol = new Solution(solPath);
         List<IntArraySolution> population = new LinkedList<>();
         for (int i = 0; i < populationSize; i++) {
             IntArraySolution s = new IntArraySolution(problem.usedComponents.size(), possibleValues);
             s.randomize(rnd);
             for (int j = 0; j < s.size(); ++j) {
-                if (rnd.nextDouble() < 0.88) {
+                if (rnd.nextDouble() < 0.00) {
                     s.values[j] = sol.getCompLocationsArrray().get(j);
                 }
             }
