@@ -30,6 +30,7 @@ public class ConstraintsChecker {
 
     private boolean checkServerAllocation(final Solution s) {
         for (int i = 0; i < 42; ++i) {
+            // TODO their checker bug
             if (!s.componentLocation.containsKey(Integer.valueOf(i + 1))) {
                 return false;
             }

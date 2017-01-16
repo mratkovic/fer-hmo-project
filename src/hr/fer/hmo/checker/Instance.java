@@ -196,8 +196,9 @@ public class Instance {
     }
 
     public float calcServerMaxCost(final Integer server) {
-        float cost = (serverMaxPower.get(server).floatValue() - serverIdlePower.get(server).floatValue())
-                / cpuAvailable.get(server).floatValue();
+        float cost = serverIdlePower.get(server).floatValue()
+                + (serverMaxPower.get(server).floatValue() - serverIdlePower.get(server).floatValue())
+                        / cpuAvailable.get(server).floatValue();
         return cost;
     }
 

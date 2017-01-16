@@ -3,21 +3,18 @@ package hr.fer.zemris.optjava.dz4.ga;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 
-import hr.fer.zamris.optjava.localsearch.ILocalSearch;
 import hr.fer.zemris.optjava.dz4.function.IFunction;
 import hr.fer.zemris.optjava.ga.cross.ICross;
 import hr.fer.zemris.optjava.ga.decoder.IDecoder;
 import hr.fer.zemris.optjava.ga.mutation.IMutation;
 import hr.fer.zemris.optjava.ga.selection.ISelection;
 import hr.fer.zemris.optjava.ga.solution.SingleObjectiveSolution;
+import hr.fer.zemris.optjava.localsearch.ILocalSearch;
 
 public class GenerationGA<T extends SingleObjectiveSolution> {
-    private static final double EPS = 1e-5;
-
     IFunction f;
     IFunction fitnessFunction;
     IDecoder<T> decoder;
@@ -98,7 +95,6 @@ public class GenerationGA<T extends SingleObjectiveSolution> {
     }
 
     public void run(List<T> population) {
-        long startTime = System.nanoTime();
         evaluatePopulation(population);
 
         best = population.get(0);
@@ -106,21 +102,15 @@ public class GenerationGA<T extends SingleObjectiveSolution> {
 
         int it = 0;
         while (it < maxIteration && best.value > minValue) {
+            long startTime = System.currentTimeMillis();
             population = runSingleIteration(population);
             T newBest = population.get(0);
-            HashSet<T> pop = new HashSet<>(population);
+            long estimatedTime = System.currentTimeMillis() - startTime;
 
             if (it % printCnt == 0) {
-                int inf = 0;
-                for (T p : population) {
-                    if (p.fitness == -Float.POSITIVE_INFINITY) {
-                        inf++;
-                    }
-                }
-                System.out.println(it + "\t\tBest ->  Fitness: " + newBest.fitness + "; Cost: " + newBest.value + ";"
-                        + pop.size() + "; infs" + inf);
+                System.out.println(it + "\t\tBest ->  Fitness: " + newBest.fitness + "; Cost: " + newBest.value
+                        + "; elapsed: " + estimatedTime);
             }
-            f.saveSolution(decoder.decode(newBest), String.format("solutions/%f.txt", newBest.value));
 
             best = newBest;
             ++it;
@@ -128,7 +118,6 @@ public class GenerationGA<T extends SingleObjectiveSolution> {
         }
         System.out.println("Iter:\t" + it);
         System.out.println("Best value: " + best.value);
-        System.out.println("Time:" + (System.nanoTime() - startTime) / 1e9 + "s");
     }
 
     protected List<T> runSingleIteration(List<T> population) {
@@ -142,39 +131,33 @@ public class GenerationGA<T extends SingleObjectiveSolution> {
             T p1 = selection.selectFromPopulation(population, rnd);
             T p2 = selection.selectFromPopulation(population, rnd);
             List<T> children = cross.crossParents(p1, p2);
-            T bestChild = mutation.mutate(p1);
-            List<T> neighbors = localSearch.neighbors(children.get(0));
-            // neighbors.add(bestChild);
-            evaluatePopulation(neighbors);
-            for (int i = 0; i < neighbors.size(); ++i) {
-                if (neighbors.get(i).value < 4020
-                        && !new File((String.format("solutions/%f.txt", neighbors.get(i).value))).isFile()) {
-                    f.saveSolution(decoder.decode(neighbors.get(i)),
-                            String.format("solutions/%f.txt", neighbors.get(i).value));
-                    System.out.println("SAVED" + String.format("solutions/%f.txt", neighbors.get(i).value));
-                }
-            }
-            nextGen.add(neighbors.get(0));
-            // nextGen.add(bestChild);
+            T bestChild = mutation.mutate(children.get(0));
 
-            // evaluate(bestChild);
-            // if (bestChild.fitness >= p1.fitness) {
-            // nextGen.add(bestChild);
-            // } else {
-            // List<T> neighbors = localSearch.neighbors(p1);
+            List<T> neighbors = localSearch.neighbors(bestChild);
             // evaluatePopulation(neighbors);
-            // System.out.println("Roditelj" + p1.value);
             // for (int i = 0; i < neighbors.size(); ++i) {
-            // System.out.print(neighbors.get(i).value + " ");
+            // String name = String.format("solutions/%f.txt",
+            // neighbors.get(i).value);
+            // if (neighbors.get(i).value < 3980 && !new File(name).isFile()) {
+            // f.saveSolution(decoder.decode(neighbors.get(i)), name);
+            // System.out.println("SAVED" + name);
             // }
-            // System.out.println();
-            // nextGen.add(neighbors.get(0));
             // }
+
+            nextGen.add(neighbors.get(0));
+
         }
         population.clear();
         population = nextGen;
 
         evaluatePopulation(population);
+        for (int i = 0; i < population.size(); ++i) {
+            String name = String.format("solutions/%f.txt", population.get(i).value);
+            if (population.get(i).value < 3980 && !new File(name).isFile()) {
+                f.saveSolution(decoder.decode(population.get(i)), name);
+                System.out.println("SAVED" + name);
+            }
+        }
         return population;
     }
 
@@ -187,9 +170,14 @@ public class GenerationGA<T extends SingleObjectiveSolution> {
     }
 
     protected void evaluatePopulation(final List<T> population) {
+        long startTime = System.currentTimeMillis();
         for (T sol : population) {
             evaluate(sol);
         }
+
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        // System.out.println(population.size() + "; elapsed: " +
+        // estimatedTime);
         population.sort(descComparator);
     }
 

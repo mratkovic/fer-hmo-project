@@ -8,8 +8,6 @@ import java.util.Random;
 import hr.fer.hmo.checker.ConstraintsChecker;
 import hr.fer.hmo.checker.FitnessCalculator;
 import hr.fer.hmo.checker.Instance;
-import hr.fer.zamris.optjava.localsearch.ILocalSearch;
-import hr.fer.zamris.optjava.localsearch.PermutationSwapNeighbors;
 import hr.fer.zemris.optjava.dz4.function.IFunction;
 import hr.fer.zemris.optjava.dz4.function.InstanceFunctionPermutation;
 import hr.fer.zemris.optjava.dz4.ga.GenerationGA;
@@ -23,8 +21,10 @@ import hr.fer.zemris.optjava.ga.selection.ISelection;
 import hr.fer.zemris.optjava.ga.selection.RouletteWheelSelection;
 import hr.fer.zemris.optjava.ga.selection.Tournament;
 import hr.fer.zemris.optjava.ga.solution.Permutation;
+import hr.fer.zemris.optjava.localsearch.ILocalSearch;
+import hr.fer.zemris.optjava.localsearch.PermutationSwapNeighbors;
 
-public class GARunner2 {
+public class GARunnerPermutation {
 
     private static final double MAX_VAL = 5;
     private static final double MIN_VAL = -5;
@@ -67,11 +67,8 @@ public class GARunner2 {
             final int populationSize) throws IOException {
 
         List<Permutation> population = new LinkedList<>();
-        // int[] initial = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
-        // 15, 16, 17, 32, 35, 18, 33, 34, 31, 41, 40,
-        // 39, 38, 37, 36, 21, 20, 19, 24, 23, 22, 27, 26, 25, 30, 29, 28 };
-        int[] initial = { 2, 12, 14, 29, 19, 25, 26, 27, 18, 23, 24, 37, 39, 10, 16, 17, 35, 40, 13, 30, 34, 38, 0, 1,
-                20, 8, 22, 33, 41, 7, 9, 32, 36, 6, 28, 31, 3, 4, 15, 5, 11, 21 };
+        int[] initial = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 32, 35, 18, 33, 34, 31, 41, 40,
+                39, 38, 37, 36, 21, 20, 19, 24, 23, 22, 27, 26, 25, 30, 29, 28 };
 
         for (int i = 0; i < populationSize; i++) {
             Permutation s = new Permutation(problem.usedComponents.size());

@@ -1,4 +1,4 @@
-package hr.fer.zamris.optjava.localsearch;
+package hr.fer.zemris.optjava.localsearch;
 
 import java.util.List;
 

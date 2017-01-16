@@ -54,7 +54,7 @@ public class InstanceFunction implements IFunction {
             return Float.POSITIVE_INFINITY;
         }
 
-        return calc.calculate(sol) + penalty * 1000;
+        return calc.calculate(sol) + penalty * 4000;
 
     }
 

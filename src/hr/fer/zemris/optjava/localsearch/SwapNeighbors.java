@@ -1,4 +1,4 @@
-package hr.fer.zamris.optjava.localsearch;
+package hr.fer.zemris.optjava.localsearch;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,15 +24,16 @@ public class SwapNeighbors implements ILocalSearch<IntArraySolution> {
     public List<IntArraySolution> neighbors(final IntArraySolution individual) {
         List<IntArraySolution> ns = new ArrayList<>();
         for (int i = 0; i < n; ++i) {
+            IntArraySolution d = individual.duplicate();
             for (int k = 0; k < kSwaps; ++k) {
-                IntArraySolution d = individual.duplicate();
                 int r1 = rnd.nextInt(individual.size());
                 int r2 = rnd.nextInt(individual.size());
 
-                d.values[r1] = individual.values[r2];
-                d.values[r2] = individual.values[r1];
-                ns.add(d);
+                int tmp = d.values[r1];
+                d.values[r1] = d.values[r2];
+                d.values[r2] = tmp;
             }
+            ns.add(d);
         }
         return ns;
     }
